@@ -25,7 +25,6 @@ var Promise = require('bluebird');
 var pkgConf = require('pkg-conf');
 var chalk = require('chalk');
 var isCi = require('is-ci');
-var ms = require('ms');
 var colors = require('./lib/colors');
 var verboseReporter = require('./lib/reporters/verbose');
 var miniReporter = require('./lib/reporters/mini');
@@ -124,7 +123,8 @@ var api = new Api({
 	cacheEnabled: cli.flags.cache !== false,
 	explicitTitles: cli.flags.watch,
 	match: arrify(cli.flags.match),
-	babelConfig: conf.babel
+	babelConfig: conf.babel,
+	timeout: cli.flags.timeout
 });
 
 var reporter;
@@ -157,27 +157,6 @@ if (files.length === 0) {
 	];
 }
 
-var timeout;
-var timer;
-
-function restartTimer() {
-	clearTimeout(timer);
-
-	timer = setTimeout(onTimeout, timeout);
-}
-
-function onTimeout() {
-	logger.finish();
-	console.log('  ' + colors.error(figures.cross) + ' Exited because no new tests completed within last ' + cli.flags.timeout + ' of inactivity.');
-	logger.exit(1);
-}
-
-if (cli.flags.timeout && !cli.flags.watch) {
-	timeout = ms(cli.flags.timeout);
-
-	api.on('test', restartTimer);
-}
-
 if (cli.flags.watch) {
 	try {
 		var watcher = new Watcher(logger, api, files, arrify(cli.flags.source));
@@ -193,10 +172,6 @@ if (cli.flags.watch) {
 		}
 	}
 } else {
-	if (cli.flags.timeout) {
-		restartTimer();
-	}
-
 	api.run(files)
 		.then(function () {
 			logger.finish();

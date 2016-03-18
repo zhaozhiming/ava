@@ -14,6 +14,7 @@ var resolveCwd = require('resolve-cwd');
 var uniqueTempDir = require('unique-temp-dir');
 var findCacheDir = require('find-cache-dir');
 var slash = require('slash');
+var ms = require('ms');
 var AvaError = require('./lib/ava-error');
 var fork = require('./lib/fork');
 var formatter = require('./lib/enhance-assert').formatter();
@@ -29,6 +30,10 @@ function Api(options) {
 	this.options = options || {};
 	this.options.require = (this.options.require || []).map(resolveCwd);
 	this.options.match = this.options.match || [];
+
+	if (this.options.timeout) {
+		this.options.timeout = ms(this.options.timeout);
+	}
 
 	this.excludePatterns = [
 		'!**/node_modules/**',
@@ -167,6 +172,21 @@ Api.prototype._prefixTitle = function (file) {
 	return prefix;
 };
 
+Api.prototype._restartTimer = function () {
+	clearTimeout(this._timer);
+
+	this._timer = setTimeout(this._onTimeout, this.options.timeout);
+};
+
+Api.prototype._onTimeout = function () {
+	var message = 'Exited because no new tests completed within last ' + this.options.timeout + 'ms of inactivity';
+
+	this._handleExceptions({
+		exception: new AvaError(message),
+		file: null
+	});
+};
+
 Api.prototype.run = function (files, options) {
 	var self = this;
 
@@ -174,6 +194,11 @@ Api.prototype.run = function (files, options) {
 
 	if (options && options.runOnlyExclusive) {
 		this.hasExclusive = true;
+	}
+
+	if (this.options.timeout) {
+		this._restartTimer();
+		this.on('test', this._restartTimer);
 	}
 
 	return handlePaths(files, this.excludePatterns)

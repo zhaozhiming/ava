@@ -79,9 +79,9 @@ test('disallow invalid babel config shortcuts', function (t) {
 });
 
 test('timeout', function (t) {
-	execCli(['fixture/long-running.js', '-T', '1s'], function (err, stdout) {
+	execCli(['fixture/long-running.js', '-T', '1s'], function (err, stdout, stderr) {
 		t.ok(err);
-		t.match(stdout, /Exited because no new tests completed within last 1s of inactivity/);
+		t.match(stderr, /Exited because no new tests completed within last 1000ms of inactivity/);
 		t.end();
 	});
 });
