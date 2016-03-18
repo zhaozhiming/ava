@@ -682,16 +682,16 @@ AVA automatically removes unrelated lines in stack traces, allowing you to find 
 
 ### Global timeout
 
-A global timeout can be set via `--timeout` option.
+A global timeout can be set via the `--timeout` option.
 Timeout in AVA behaves differently than in other test frameworks.
-AVA resets a timer after each test, forcing tests to quit if no new test results received within specified "timeout time".
+AVA resets a timer after each test, forcing tests to quit if no new test results were received within the specified timeout.
 
 You can set timeouts in a human-readable way:
 
 ```
-$ ava --timeout 10s # 10 seconds
-$ ava --timeout 2m # 2 minutes
-$ ava --timeout 100 # 100 milliseconds
+$ ava --timeout=10s # 10 seconds
+$ ava --timeout=2m # 2 minutes
+$ ava --timeout=100 # 100 milliseconds
 ```
 
 ## API
